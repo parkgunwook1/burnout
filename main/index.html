@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>회사 번아웃 자가진단 테스트</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f9fafb;
+      --text: #222;
+      --subtext: #555;
+      --primary: #5c6ac4;
+      --primary-light: #e6e9ff;
+      --border: #e1e4e8;
+      --muted: #8d94a6;
+      --danger: #c45c7a;
+      font-family: "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+    .app {
+      width: min(720px, 100%);
+      background: #fff;
+      border-radius: 24px;
+      padding: 32px 24px 40px;
+      box-shadow: 0 20px 60px rgba(92,106,196,0.12);
+    }
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(1.7rem, 2vw, 2.2rem);
+    }
+    h2 {
+      margin-top: 0;
+      color: var(--subtext);
+      font-weight: 500;
+      font-size: 1rem;
+    }
+    button {
+      font: inherit;
+      cursor: pointer;
+      border: none;
+    }
+    .primary-btn {
+      background: var(--primary);
+      color: #fff;
+      padding: 14px 24px;
+      border-radius: 999px;
+      font-weight: 600;
+      width: 100%;
+    }
+    section { display: none; }
+    section.active { display: block; }
+    .hero {
+      text-align: center;
+      padding: 24px 12px 16px;
+    }
+    .disclaimer {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .progress-wrap {
+      margin: 20px 0;
+    }
+    .progress-text {
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .progress-bar {
+      height: 8px;
+      border-radius: 999px;
+      background: var(--primary-light);
+      overflow: hidden;
+    }
+    .progress-bar span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.25s ease;
+    }
+    .question-card {
+      background: #f4f5fb;
+      border-radius: 18px;
+      padding: 22px;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      box-shadow: inset 0 0 0 1px rgba(92,106,196,0.08);
+    }
+    .answers {
+      margin-top: 20px;
+      display: grid;
+      gap: 12px;
+    }
+    .answer-btn {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px 16px;
+      text-align: left;
+      background: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: border 0.2s ease, transform 0.15s ease;
+    }
+    .answer-btn:active { transform: scale(0.98); }
+    .answer-btn strong { color: var(--primary); }
+    .result-header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .score-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .level-title {
+      font-size: 1.3rem;
+      margin: 6px 0;
+    }
+    .level-summary {
+      font-size: 1.1rem;
+      margin: 8px 0 16px;
+      color: var(--text);
+    }
+    .level-desc { color: var(--subtext); }
+    .recommend-list {
+      margin: 16px 0 24px;
+      padding-left: 18px;
+      color: var(--text);
+    }
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .secondary-btn {
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-weight: 600;
+      text-align: center;
+      color: var(--text);
+    }
+    .copy-feedback {
+      text-align: center;
+      color: var(--primary);
+      font-size: 0.95rem;
+      margin-top: 8px;
+      min-height: 20px;
+    }
+    @media (min-width: 640px) {
+      .actions { flex-direction: row; }
+      .actions button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <section id="start-screen" class="hero active">
+      <h1>회사 번아웃 자가진단 테스트</h1>
+      <h2>3분 만에, 나는 얼마나 지쳐있는지 확인해보세요.</h2>
+      <button class="primary-btn" id="start-btn">테스트 시작하기</button>
+      <p class="disclaimer">이 테스트는 자가 체크용 참고 자료이며 의학적 진단이 아닙니다.</p>
+    </section>
+
+    <section id="test-screen">
+      <div class="progress-wrap">
+        <div class="progress-text" id="progress-text">10문항 중 1번</div>
+        <div class="progress-bar"><span id="progress-bar"></span></div>
+      </div>
+      <div class="question-card" id="question-text"></div>
+      <div class="answers" id="answers"></div>
+    </section>
+
+    <section id="result-screen">
+      <div class="result-header">
+        <div class="score-pill" id="score-pill">총점 0점</div>
+        <div class="level-title" id="level-title"></div>
+        <div class="level-summary" id="level-summary"></div>
+        <p class="level-desc" id="level-desc"></p>
+      </div>
+      <ul class="recommend-list" id="recommend-list"></ul>
+      <p class="disclaimer">이 테스트는 자가 체크용 참고 자료이며, 필요 시 전문 상담을 권장합니다.</p>
+      <p class="disclaimer danger-text" id="danger-note"></p>
+      <div class="actions">
+        <button class="secondary-btn" id="copy-btn">결과 요약 복사하기</button>
+        <button class="primary-btn" id="restart-btn">다시 테스트하기</button>
+      </div>
+      <div class="copy-feedback" id="copy-feedback"></div>
+    </section>
+  </div>
+
+  <script>
+    // 질문과 레벨을 고정 상수로 정의
+    const QUESTIONS = [
+      "일을 마치고 집에 와도 머릿속에서 회사 생각이 잘 떠나지 않는다.",
+      "아침에 출근 생각을 하면 몸이 무겁고, 침대에서 일어나기 싫다.",
+      "일을 잘 해내도 뿌듯함보다 \"겨우 이 정도인가…\" 하는 허무함이 더 크다.",
+      "평소보다 사소한 일에도 쉽게 짜증이 나거나 예민해진다.",
+      "집중이 잘 안 되고, 예전보다 실수나 누락이 잦아졌다.",
+      "주말이나 휴일에도 회사 일/채팅/메일이 계속 신경 쓰인다.",
+      "회사 사람들과 대화하거나 회의하는 게 점점 더 피곤하게 느껴진다.",
+      "지금 하는 일이 '성장'보다 그냥 '버티기'용 생존 수단 같다는 생각이 든다.",
+      "최근 들어 잠이 잘 오지 않거나, 잤는데도 개운하지 않은 날이 많다.",
+      "스스로도 \"나 지금 번아웃 온 것 같다\"는 생각을 자주 한다."
+    ];
+
+    const LEVELS = [
+      {
+        range: [10, 19],
+        name: "괜찮은 편입니다",
+        summary: "지금의 나는, '숨 고르는 직장인' 상태입니다.",
+        description: "아직 번아웃 상태는 아니지만, 가끔은 휴식과 거리두기가 필요합니다.",
+        tips: [
+          "주중에도 짧은 산책이나 스트레칭 시간을 확보하세요.",
+          "퇴근 후에는 일과 관련된 알림을 잠시 꺼두세요.",
+          "일정 주기로 소소한 즐거움을 계획해 보세요."
+        ]
+      },
+      {
+        range: [20, 29],
+        name: "조금 지쳐 있는 상태입니다",
+        summary: "지금의 나는, '살짝 지친 회사원' 상태입니다.",
+        description: "피로와 스트레스가 서서히 쌓이고 있습니다.",
+        tips: [
+          "주 1회는 완전한 휴식일을 만들어주세요.",
+          "퇴근 후 1시간은 일 생각 없이 좋아하는 활동에 집중하세요.",
+          "업무 중 미니 브레이크(5분 눈 감기, 호흡 등)를 넣어보세요."
+        ]
+      },
+      {
+        range: [30, 39],
+        name: "번아웃 주의 단계입니다",
+        summary: "지금의 나는, '경고등이 켜진 직장인' 상태입니다.",
+        description: "몸과 마음의 경고등이 켜진 상태입니다.",
+        tips: [
+          "짧은 휴가나 반차를 적극 활용해 보세요.",
+          "업무 강도나 우선순위를 조정할 수 있는지 상사와 상의하세요.",
+          "신뢰할 수 있는 동료나 가족과 솔직한 대화를 나눠보세요.",
+          "커리어 방향이나 목표를 점검해보는 시간을 갖세요."
+        ]
+      },
+      {
+        range: [40, 50],
+        name: "번아웃 위험 단계입니다",
+        summary: "지금의 나는, '버티는 회사원' 상태입니다.",
+        description: "혼자 버티기보다는 도움을 요청할 시점입니다.",
+        tips: [
+          "충분한 휴식 시간을 확보하고 업무에서 잠시 물러나세요.",
+          "회사 내에서 업무 조정이나 지원 요청을 시도해보세요.",
+          "정신건강 전문가 또는 상담센터 상담을 적극 고려하세요."
+        ],
+        dangerNote: "이 테스트는 의학적 진단이 아니며, 전문적인 도움이 필요할 수 있습니다."
+      }
+    ];
+
+    const startScreen = document.getElementById("start-screen");
+    const testScreen = document.getElementById("test-screen");
+    const resultScreen = document.getElementById("result-screen");
+
+    const startBtn = document.getElementById("start-btn");
+    const progressText = document.getElementById("progress-text");
+    const progressBar = document.getElementById("progress-bar");
+    const questionText = document.getElementById("question-text");
+    const answersContainer = document.getElementById("answers");
+
+    const scorePill = document.getElementById("score-pill");
+    const levelTitle = document.getElementById("level-title");
+    const levelSummary = document.getElementById("level-summary");
+    const levelDesc = document.getElementById("level-desc");
+    const recommendList = document.getElementById("recommend-list");
+    const dangerNote = document.getElementById("danger-note");
+    const copyBtn = document.getElementById("copy-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const copyFeedback = document.getElementById("copy-feedback");
+
+    const choices = [
+      { score: 1, label: "전혀 아니다" },
+      { score: 2, label: "그렇지 않은 편이다" },
+      { score: 3, label: "보통이다" },
+      { score: 4, label: "대체로 그렇다" },
+      { score: 5, label: "매우 그렇다" }
+    ];
+
+    let currentIndex = 0;
+    let responses = [];
+
+    // 초기화 및 화면 전환
+    startBtn.addEventListener("click", () => {
+      startScreen.classList.remove("active");
+      resultScreen.classList.remove("active");
+      testScreen.classList.add("active");
+      resetTest();
+      renderQuestion();
+    });
+
+    restartBtn.addEventListener("click", () => {
+      resultScreen.classList.remove("active");
+      startScreen.classList.add("active");
+    });
+
+    // 질문 렌더링
+    function renderQuestion() {
+      const total = QUESTIONS.length;
+      progressText.textContent = `${total}문항 중 ${currentIndex + 1}번`;
+      progressBar.style.width = `${((currentIndex) / total) * 100}%`;
+      questionText.textContent = QUESTIONS[currentIndex];
+      answersContainer.innerHTML = "";
+      choices.forEach((choice) => {
+        const btn = document.createElement("button");
+        btn.className = "answer-btn";
+        btn.innerHTML = `<span>${choice.label}</span><strong>${choice.score}점</strong>`;
+        btn.addEventListener("click", () => handleAnswer(choice.score));
+        answersContainer.appendChild(btn);
+      });
+    }
+
+    // 응답 처리 후 다음 단계
+    function handleAnswer(score) {
+      responses[currentIndex] = score;
+      currentIndex += 1;
+      if (currentIndex < QUESTIONS.length) {
+        renderQuestion();
+      } else {
+        progressBar.style.width = "100%";
+        showResult();
+      }
+    }
+
+    // 점수 계산 및 결과 뷰 표시
+    function showResult() {
+      const totalScore = responses.reduce((acc, cur) => acc + cur, 0);
+      const level = determineLevel(totalScore);
+
+      testScreen.classList.remove("active");
+      resultScreen.classList.add("active");
+
+      scorePill.textContent = `총점 ${totalScore}점`;
+      levelTitle.textContent = `[${level.name}]`;
+      levelSummary.textContent = level.summary;
+      levelDesc.textContent = level.description;
+
+      recommendList.innerHTML = "";
+      level.tips.forEach((tip) => {
+        const li = document.createElement("li");
+        li.textContent = tip;
+        recommendList.appendChild(li);
+      });
+
+      dangerNote.textContent = level.dangerNote || "";
+      copyFeedback.textContent = "";
+
+      copyBtn.onclick = () => copyResult(totalScore, level);
+    }
+
+    // 레벨 판별
+    function determineLevel(score) {
+      return LEVELS.find(({ range }) => score >= range[0] && score <= range[1]) || LEVELS[LEVELS.length - 1];
+    }
+
+    // 결과 복사
+    async function copyResult(score, level) {
+      const summary = `회사 번아웃 자가진단 테스트 결과: 총점 ${score}점, 레벨 "${level.name}". 한 줄 요약: ${level.summary}`;
+      try {
+        await navigator.clipboard.writeText(summary);
+        copyFeedback.textContent = "결과 요약을 복사했습니다.";
+      } catch (err) {
+        copyFeedback.textContent = "복사에 실패했습니다. 다시 시도해주세요.";
+      }
+    }
+
+    // 상태 리셋
+    function resetTest() {
+      currentIndex = 0;
+      responses = [];
+      progressBar.style.width = "0%";
+      copyFeedback.textContent = "";
+    }
+  </script>
+</body>
+</html>
